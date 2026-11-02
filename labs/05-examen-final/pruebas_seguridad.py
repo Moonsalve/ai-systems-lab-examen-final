@@ -160,7 +160,12 @@ def detalle_respuestas(resultados: list[Resultado]) -> str:
 async def ejecutar(nucleo: Nucleo, casos: list[dict[str, Any]], academico: Path) -> list[Resultado]:
     resultados = []
     for caso in casos:
-        respuesta = await nucleo.responder(caso["pregunta"], [], sesion_para(caso["rol"]), confirmar_siempre)
+        sesion = sesion_para(caso["rol"])
+        historial = []  # "historial_previo": preguntas que se hacen antes, en la misma conversación
+        for previa in caso.get("historial_previo", []):
+            r = await nucleo.responder(previa, list(historial), sesion, confirmar_siempre)
+            historial += [{"role": "user", "content": previa}, {"role": "assistant", "content": r.texto}]
+        respuesta = await nucleo.responder(caso["pregunta"], historial, sesion, confirmar_siempre)
         resultado = Resultado(caso, respuesta, evaluar(caso, respuesta, academico))
         resultados.append(resultado)
         marca = "PASA " if resultado.pasa else "FALLA"
@@ -195,15 +200,16 @@ async def main() -> int:
     denegados = [e for e in auditoria.eventos if e["evento"] == "acceso_denegado"]
     print("\n" + resumen)
     print(f"\nEventos acceso_denegado registrados en la auditoría durante la suite: {len(denegados)}")
-    SALIDA.parent.mkdir(parents=True, exist_ok=True)
-    SALIDA.write_text(
+    salida = SALIDA if args.modo == "agente" else SALIDA.with_name(f"pruebas_seguridad_{args.modo}.md")
+    salida.parent.mkdir(parents=True, exist_ok=True)
+    salida.write_text(
         "# Salida de pruebas_seguridad.py\n\n"
         + resumen
         + f"\n\nEventos `acceso_denegado` en la auditoría: {len(denegados)}\n\n"
         + detalle_respuestas(resultados),
         encoding="utf-8",
     )
-    print(f"Guardado en {SALIDA}")
+    print(f"Guardado en {salida}")
     return 0 if all(r.pasa for r in resultados) else 1
 
 

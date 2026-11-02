@@ -71,7 +71,7 @@ Pregunta del usuario: {question}"""
 # mejor coincidencia está en un nivel no permitido. No contiene ningún texto restringido.
 AVISO_RESTRINGIDO = """[Aviso del sistema] La información más relevante para esta pregunta está en \
 documentos restringidos que este usuario NO puede ver. No la conoces. Si los fragmentos anteriores \
-no responden la pregunta, dile que es información restringida y que {accion}. No adivines ni inventes datos."""
+no responden la pregunta, dile que es información restringida y que {accion}. No adivines ni inventes datos: no deduzcas fechas, horas ni lugares a partir de otras fechas del curso."""
 
 # --- Agente -----------------------------------------------------------------------------------
 

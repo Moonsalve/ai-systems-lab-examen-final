@@ -17,6 +17,7 @@ from pathlib import Path
 import acceso
 from agent import ConfirmFn
 from auditoria import Auditoria
+from fundamentacion import fechas_no_fundamentadas
 from llm_client import LLMError, Message
 from orchestrator import Mode, Orchestrator, OrchestratorAnswer, create_orchestrator
 from sesion import Sesion
@@ -25,6 +26,10 @@ logger = logging.getLogger(__name__)
 
 MENSAJE_ERROR_LLM = "El modelo de lenguaje no está disponible en este momento. Intenta de nuevo en unos segundos."
 MENSAJE_ERROR_GENERAL = "Ocurrió un error procesando tu pregunta. Ya quedó registrado; intenta de nuevo."
+MENSAJE_RESTRINGIDO_PUBLICO = (
+    "🔒 Esa información está en documentos restringidos del curso. Inicia sesión con /login para consultarla."
+)
+MENSAJE_RESTRINGIDO_ROL = "🔒 Esa información está en documentos restringidos a los que tu rol no tiene acceso."
 PALABRAS_AVISO = ("/login", "iniciar sesión", "inicia sesión", "no tiene acceso", "no tienes acceso")
 
 
@@ -45,6 +50,7 @@ class Respuesta:
     rol: str = "publico"
     ruta: str | None = None
     restringido: bool = False
+    respuesta_descartada: bool = False  # el software descartó fechas inventadas por el modelo
     error: bool = False
     detalle: OrchestratorAnswer | None = None
 
@@ -64,6 +70,8 @@ class Respuesta:
             lineas.append("fragmentos enviados al LLM: (ninguno)")
         if self.restringido:
             lineas.append("había coincidencias en documentos NO permitidos: se ocultaron (no llegaron al LLM)")
+        if self.respuesta_descartada:
+            lineas.append("el software DESCARTÓ la respuesta del modelo: traía fechas que no estaban en sus fuentes")
         return "\n".join(lineas)
 
 
@@ -74,9 +82,24 @@ def _con_aviso(texto: str, sesion: Sesion) -> str:
     return f"{texto}\n\n🔒 Parte de la información sobre este tema es restringida: inicia sesión con /login."
 
 
+def _sin_fundamento(answer: OrchestratorAnswer, texto: str) -> set[tuple[int, int]]:
+    """Fechas inventadas cuando había información restringida (ver fundamentacion.py)."""
+    if not answer.restringido:
+        return set()
+    fuentes = [r.chunk.text for r in answer.fragmentos]
+    fuentes += [run.result for step in answer.steps for run in step.tool_runs]
+    return fechas_no_fundamentadas(texto, fuentes)
+
+
 def _respuesta(answer: OrchestratorAnswer, sesion: Sesion) -> Respuesta:
     runs = [run for step in answer.steps for run in step.tool_runs]
     texto = answer.text.strip() or "No tengo una respuesta para eso."
+    inventadas = _sin_fundamento(answer, texto)
+    if inventadas:
+        # El modelo afirmó una fecha que no está en nada de lo que vio, sobre un tema restringido:
+        # el software descarta esa respuesta en vez de confiar en ella.
+        logger.warning("Respuesta descartada: fechas no fundamentadas %s (uid=%s)", inventadas, sesion.telegram_user_id)
+        texto = MENSAJE_RESTRINGIDO_PUBLICO if acceso.rol_efectivo(sesion) == "publico" else MENSAJE_RESTRINGIDO_ROL
     # Solo al público se le garantiza el aviso: iniciar sesión sí le daría acceso. A un estudiante
     # el aviso le llega al LLM dentro del resultado de la tool ("tu rol no tiene acceso"), y pegarlo
     # siempre confundiría cuando la pregunta ya se respondió con sus propios documentos.
@@ -91,6 +114,7 @@ def _respuesta(answer: OrchestratorAnswer, sesion: Sesion) -> Respuesta:
         rol=acceso.rol_efectivo(sesion),
         ruta=answer.routing.decision.ruta if answer.routing else None,
         restringido=answer.restringido,
+        respuesta_descartada=bool(inventadas),
         detalle=answer,
     )
 

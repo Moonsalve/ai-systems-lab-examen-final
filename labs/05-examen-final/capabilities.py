@@ -22,7 +22,8 @@ from tools import Tool
 AVISO_RESTRINGIDO_TOOL = (
     "\n\n[Aviso del sistema] Hay información más relevante en documentos restringidos que este "
     "usuario no puede ver (su contenido no se incluye). Si los fragmentos anteriores no responden, "
-    "indícale al usuario: {mensaje}"
+    "indícale al usuario: {mensaje} No deduzcas ni estimes fechas, horas ni lugares que no aparezcan "
+    "literalmente en los fragmentos (p. ej. a partir de otras fechas del curso)."
 )
 
 
