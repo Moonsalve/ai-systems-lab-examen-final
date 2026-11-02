@@ -260,13 +260,32 @@ Aunque la foto se inclinó 50°, el yaw no pasó de ±0.06, mientras que una cab
 
 ## 7. Fragmento de la auditoría
 
-⚠️ PENDIENTE — copiar de `labs/05-examen-final/auditoria.jsonl` al menos un `login_aceptado`, un `login_rechazado` y un `acceso_denegado` después de grabar. Formato (ejemplo ilustrativo, reemplazar por líneas reales):
+Líneas reales de `auditoria.jsonl` del ensayo en Telegram del 2026-11-02 (hora UTC). `5894205403` es Juan David (docente) y `9185672436` es Daniel (estudiante). Las líneas no contienen imágenes ni embeddings: solo la similitud (un número) y las métricas del giro.
 
 ```json
-{"fecha": "2026-11-04T23:10:05+00:00", "telegram_user_id": 123456789, "evento": "login_aceptado", "motivo": "girar_izquierda", "similitud": 0.71, "tool": null, "usuario_id": "integrante_1"}
-{"fecha": "2026-11-04T23:12:40+00:00", "telegram_user_id": 123456789, "evento": "login_rechazado", "motivo": "movimiento_no_detectado", "similitud": null, "tool": null, "reto": "girar_derecha", "yaw_inicial": 0.02}
-{"fecha": "2026-11-04T23:14:02+00:00", "telegram_user_id": 123456789, "evento": "acceso_denegado", "motivo": "documento_restringido_para_rol_estudiante", "similitud": null, "tool": null}
+{"fecha": "2026-11-02T17:41:36+00:00", "telegram_user_id": 9185672436, "evento": "login_aceptado", "motivo": "girar_derecha", "similitud": 0.642, "tool": null, "usuario_id": "integrante_1", "yaw_inicial": 0.006, "yaw_min": -0.581, "yaw_max": 0.062, "n_validas": 16, "continuidad": 0.898}
+{"fecha": "2026-11-02T19:09:34+00:00", "telegram_user_id": 5894205403, "evento": "login_aceptado", "motivo": "girar_izquierda", "similitud": 0.6489, "tool": null, "usuario_id": "integrante_2", "yaw_inicial": 0.018, "yaw_min": -0.055, "yaw_max": 0.506, "n_validas": 16, "continuidad": 0.875}
+{"fecha": "2026-11-02T19:15:11+00:00", "telegram_user_id": 5894205403, "evento": "login_rechazado", "motivo": "movimiento_no_detectado", "similitud": null, "tool": null, "reto": "girar_derecha", "yaw_inicial": -0.031, "yaw_min": -0.039, "yaw_max": 0.067, "n_validas": 14}
+{"fecha": "2026-11-02T19:15:37+00:00", "telegram_user_id": 5894205403, "evento": "login_rechazado", "motivo": "reenviado", "similitud": null, "tool": null}
+{"fecha": "2026-11-02T19:18:10+00:00", "telegram_user_id": 5894205403, "evento": "login_rechazado", "motivo": "reto_vencido", "similitud": null, "tool": null}
+{"fecha": "2026-11-02T19:18:10+00:00", "telegram_user_id": 5894205403, "evento": "login_rechazado", "motivo": "bloqueado", "similitud": null, "tool": null}
+{"fecha": "2026-11-02T17:43:17+00:00", "telegram_user_id": 9185672436, "evento": "acceso_denegado", "motivo": "documento_restringido_para_rol_estudiante", "similitud": null, "tool": null}
+{"fecha": "2026-11-02T17:44:16+00:00", "telegram_user_id": 9185672436, "evento": "tool_restringida_ejecutada", "motivo": null, "similitud": null, "tool": "consultar_mis_notas", "usuario_id": "integrante_1"}
+{"fecha": "2026-11-02T19:11:15+00:00", "telegram_user_id": 5894205403, "evento": "tool_restringida_ejecutada", "motivo": null, "similitud": null, "tool": "registrar_nota", "usuario_id": "integrante_2"}
+{"fecha": "2026-11-02T17:46:21+00:00", "telegram_user_id": 9185672436, "evento": "logout", "motivo": null, "similitud": null, "tool": null}
 ```
+
+En orden:
+1. Login aceptado de Daniel (estudiante, celular que espeja, `girar_derecha`, similitud 0.642).
+2. Login aceptado de Juan David (docente, similitud 0.649).
+3. Prueba 10 (foto en otra pantalla): rechazada por `movimiento_no_detectado`; el yaw no pasó de 0.07.
+4. Prueba 12a: video-nota **reenviada**, rechazada.
+5. Prueba 12b: reto **vencido**, rechazado.
+6. Prueba 13: tercer fallo seguido, cuenta **bloqueada**.
+7. Acceso denegado: había un documento de nivel docente relevante para una pregunta de Daniel y no llegó al LLM.
+8. Tool restringida `consultar_mis_notas` ejecutada para Daniel (prueba 5).
+9. Tool restringida `registrar_nota` ejecutada por el docente después de confirmar con el botón **Sí** (prueba 9).
+10. `/logout` de Daniel (prueba 14).
 
 ---
 
