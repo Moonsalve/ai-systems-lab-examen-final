@@ -6,14 +6,17 @@
       "nombre": "Daniel Felipe Aguilar Latorre",
       "rol": "estudiante",
       "codigo_estudiante": "522709",
-      "telegram_user_id": 9185672436
+      "telegram_user_id": 9185672436,
+      "signo_camara": -1
     },
     {
       "id": "integrante_2",
       "nombre": "Juan David Monsalve Niño",
       "rol": "docente",
       "codigo_estudiante": null,
-      "telegram_user_id": 5894205403
+      "telegram_user_id": 5894205403,
+      "signo_camara": 1
     }
-  ]
+  ],
+  "_nota_signo_camara": "signo_camara: +1 si la video-nota del celular del usuario no sale espejada, -1 si sale espejada (calibrado con video-notas reales; depende del dispositivo)."
 }

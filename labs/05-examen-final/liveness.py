@@ -86,13 +86,14 @@ def muestrear_frames(video: Path, n: int = FRAMES_A_MUESTREAR) -> list[tuple[int
         cap.release()
 
 
-def _yaw_izquierda(rostro: Rostro) -> float:
+def _yaw_izquierda(rostro: Rostro, signo: float = SIGNO_IZQUIERDA) -> float:
     """Yaw con el signo calibrado: positivo = girado hacia la izquierda de la persona."""
-    return rostro.yaw() * SIGNO_IZQUIERDA
+    return rostro.yaw() * signo
 
 
-def verificar_movimiento(reto: str, rostros: list[Rostro]) -> tuple[bool, dict]:
-    yaws = [_yaw_izquierda(r) for r in rostros]
+def verificar_movimiento(reto: str, rostros: list[Rostro], signo: float | None = None) -> tuple[bool, dict]:
+    signo = SIGNO_IZQUIERDA if signo is None else signo
+    yaws = [_yaw_izquierda(r, signo) for r in rostros]
     anchos = [r.ancho for r in rostros]
     inicio = float(np.median(yaws[:2]))
     detalles = {"yaw_inicial": round(inicio, 3), "yaw_min": round(min(yaws), 3), "yaw_max": round(max(yaws), 3)}
@@ -120,7 +121,7 @@ def verificar_movimiento(reto: str, rostros: list[Rostro]) -> tuple[bool, dict]:
 
 
 def verificar(
-    motor: MotorFacial, video: Path, reto: str, enrolados: np.ndarray, umbral: float
+    motor: MotorFacial, video: Path, reto: str, enrolados: np.ndarray, umbral: float, signo: float | None = None
 ) -> ResultadoVida:
     frames = muestrear_frames(video)
     if not frames:
@@ -138,7 +139,7 @@ def verificar(
     rostros = [m.rostros[0] for m in validas]
 
     # 3. Movimiento pedido
-    movimiento_ok, detalles = verificar_movimiento(reto, rostros)
+    movimiento_ok, detalles = verificar_movimiento(reto, rostros, signo)
     detalles["n_validas"] = len(validas)
     if not movimiento_ok:
         return ResultadoVida(False, "movimiento_no_detectado", detalles=detalles)

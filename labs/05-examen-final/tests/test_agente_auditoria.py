@@ -162,3 +162,11 @@ async def test_sesion_que_vence_durante_la_confirmacion_no_ejecuta():
     run = await agente.execute(ToolCall("c", "solicitar_supletorio", "{}"))
     assert run.status == "denegada"
     assert auditoria.eventos[-1]["motivo"] == "sesion_vencida_durante_confirmacion"
+
+
+def test_signo_por_dispositivo():
+    # El celular de Daniel espeja la video-nota: su giro a la izquierda llega con yaw negativo.
+    espejado = _secuencia(0, 0.01, -0.3, -0.46, -0.1)
+    assert not verificar_movimiento("girar_izquierda", espejado)[0]
+    assert verificar_movimiento("girar_izquierda", espejado, signo=-1)[0]
+    assert not verificar_movimiento("girar_derecha", espejado, signo=-1)[0]

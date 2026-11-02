@@ -104,7 +104,7 @@ class ServicioLogin:
             return self._rechazar(uid, "usuario_no_enrolado")
 
         try:
-            resultado = verificar(self.motor, video, reto.nombre, enrolados, self.umbral)
+            resultado = verificar(self.motor, video, reto.nombre, enrolados, self.umbral, usuario.signo_camara)
         except Exception:
             logger.exception("Error analizando la video-nota de %s", uid)
             return self._rechazar(uid, "error_analisis")

@@ -14,6 +14,9 @@ class Usuario:
     rol: Rol
     codigo_estudiante: str | None
     telegram_user_id: int | None
+    # Signo del giro "izquierda" en el video del DISPOSITIVO de este usuario: +1 si la video-nota
+    # no sale espejada, -1 si sale espejada (depende del celular). None = el global del .env.
+    signo_camara: float | None = None
 
 
 def cargar_usuarios(path: Path) -> list[Usuario]:
@@ -31,9 +34,18 @@ def cargar_usuarios(path: Path) -> list[Usuario]:
                 rol=rol,
                 codigo_estudiante=item.get("codigo_estudiante"),
                 telegram_user_id=int(tg) if tg is not None else None,
+                signo_camara=_signo(item.get("signo_camara")),
             )
         )
     return usuarios
+
+
+def _signo(valor) -> float | None:
+    if valor is None:
+        return None
+    if valor not in (1, -1):
+        raise ValueError(f"signo_camara debe ser 1 o -1, no {valor!r}")
+    return float(valor)
 
 
 def buscar_por_telegram(usuarios: list[Usuario], telegram_user_id: int) -> Usuario | None:
