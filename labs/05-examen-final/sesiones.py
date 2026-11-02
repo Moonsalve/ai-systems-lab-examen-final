@@ -88,6 +88,11 @@ class SessionStore:
         reto = self._retos.get(uid)
         return reto is not None and not reto.usado
 
+    def reto_pendiente_nombre(self, uid: int) -> str:
+        """Nombre del reto vigente (solo para nombrar videos de calibración); no lo consume."""
+        reto = self._retos.get(uid)
+        return reto.nombre if reto is not None and not reto.usado else "sin_reto"
+
     # --- Bloqueo --------------------------------------------------------------------------
 
     def bloqueado(self, uid: int) -> bool:

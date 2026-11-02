@@ -123,11 +123,29 @@ Cambiaron "poco" en cantidad de líneas porque el Lab 04 ya separaba responsabil
 
 ### Tabla FAR/FRR
 
-⚠️ PENDIENTE — pegar aquí la salida de `umbral.py` (`resultados/umbral.md`) cuando estén las 5 fotos de cada integrante. Diseño de la medición: 5 fotos por integrante → **20 pares genuinos** (C(5,2) × 2); impostores = integrante vs. integrante (25 pares) + cada integrante vs. 19 rostros de LFW → **≈215 pares impostores**.
+Salida de `umbral.py` (`resultados/umbral.md`, 2026-11-02). 5 fotos por integrante → **20 pares genuinos** (C(5,2) × 2). Impostores: integrante vs. integrante (25 pares) + cada integrante vs. 19 rostros de LFW (una foto de LFW se descartó porque tenía dos caras) → **215 pares impostores**.
+
+- Similitud genuinos: mín. **0.535** · media 0.711 · máx. 0.883
+- Similitud impostores: mín. −0.211 · media 0.046 · máx. **0.250**
+
+| Umbral | FAR | FRR | Impostores aceptados | Genuinos rechazados |
+|---:|---:|---:|---:|---:|
+| 0.250 | 0.0 % | 0.0 % | 0/215 | 0/20 |
+| 0.300 | 0.0 % | 0.0 % | 0/215 | 0/20 |
+| 0.363 (referencia SFace) | 0.0 % | 0.0 % | 0/215 | 0/20 |
+| **0.400 (elegido)** | **0.0 %** | **0.0 %** | 0/215 | 0/20 |
+| 0.450 | 0.0 % | 0.0 % | 0/215 | 0/20 |
+| 0.500 | 0.0 % | 0.0 % | 0/215 | 0/20 |
+| 0.550 | 0.0 % | 5.0 % | 0/215 | 1/20 |
 
 Prueba preliminar del pipeline (sin fotos de los integrantes, solo LFW): la misma foto espejada dio similitud media **0.933** (mín. 0.863) y 171 pares de personas distintas dieron media **0.085** (máx. **0.287**). Es decir, con 0.363 ningún impostor de LFW habría sido aceptado.
 
-**Criterio de elección:** en este sistema el error grave es la **falsa aceptación** (FAR): significa que otra persona ve notas u observaciones ajenas o registra notas. El falso rechazo (FRR) solo obliga a repetir el login. Por eso se elige el umbral más bajo con **FAR = 0** en nuestros datos, aunque el FRR suba un poco. ⚠️ PENDIENTE: valor elegido y su justificación con la tabla.
+**Criterio de elección:** en este sistema el error grave es la **falsa aceptación** (FAR): significa que otra persona ve notas u observaciones ajenas o registra notas. El falso rechazo (FRR) solo obliga a repetir el login. En nuestros datos las dos distribuciones no se tocan: hay FAR = FRR = 0 en todo el rango 0.25–0.50. Elegimos **0.40** y no el mínimo de ese rango por dos razones:
+
+1. **Margen contra la falsa aceptación**, el error grave: 0.40 queda 0.15 por encima del impostor más parecido (0.250). Con 0.30 el margen sería de solo 0.05, y con más personas o peor iluminación aparecerían impostores más parecidos que los de nuestra muestra.
+2. **Margen contra el falso rechazo con video real:** los frames de una video-nota tienen menos resolución y peor luz que las fotos de enrolamiento. Por eso no subimos a 0.50, que deja apenas 0.035 bajo el genuino más bajo.
+
+**Validación con video-notas reales (2026-11-02):** en los logins de Juan David la similitud del frame frontal contra su enrolamiento fue **0.65–0.70**. Las mismas video-notas contra el enrolamiento de Daniel dieron **0.11–0.13**, y fueron rechazadas (simulación de la prueba 11). El umbral queda en medio de las dos con amplio margen.
 
 ---
 
@@ -138,23 +156,39 @@ Prueba preliminar del pipeline (sin fotos de los integrantes, solo LFW): la mism
 **Verificación por frames** (`liveness.py`), sobre 16 frames distribuidos en la video-nota:
 
 1. **Rostros válidos:** ningún frame con más de un rostro, y al menos el 70 % con exactamente uno.
-2. **Movimiento pedido:** `yaw = (nariz_x − medio_ojos_x) / distancia_entre_ojos`. Debe empezar de frente (|yaw| ≤ 0.25) y desplazarse ≥ 0.18 en el sentido pedido. El signo se calibra (`liveness.py --calibrar`) porque la cámara frontal puede espejar.
+2. **Movimiento pedido:** `yaw = (nariz_x − centro_del_rostro_x) / ancho_del_rostro` (centro y ancho del recuadro de YuNet). Debe empezar de frente (|yaw| ≤ 0.15) y desplazarse **≥ 0.25** en el sentido pedido. En los retos de un solo lado, el giro hacia el lado **contrario** debe quedar por debajo de 0.25. El signo se calibró con video-notas reales: Telegram no espeja (positivo = la persona gira a su izquierda).
 3. **Mismo rostro:** el frame más frontal de la primera mitad y el de la segunda mitad deben tener similitud ≥ umbral.
 4. **Identidad 1:1:** el frame más frontal de todo el video supera el umbral contra los embeddings del dueño de la cuenta.
 
 Además: se rechazan video-notas **reenviadas** (`message.forward_origin`), anteriores al reto o demasiado largas, fotos y videos normales; el mp4 se borra al terminar; al usuario se le responde siempre "No fue posible verificar tu identidad" y el motivo real queda solo en la auditoría.
 
-**Por qué detecta la "foto de una foto":** una foto es plana. Al girarla frente a la cámara, todo el rostro se comprime horizontalmente en la misma proporción, así que el cociente nariz/ojos (yaw) casi no cambia; en una cabeza real, la nariz sobresale y se desplaza respecto a los ojos.
+**Por qué detecta la "foto de una foto":** una foto es plana. Al girarla frente a la cámara, todo el rostro se comprime horizontalmente en la misma proporción, así que la posición relativa de la nariz dentro del rostro (yaw) casi no cambia. En una cabeza real, la nariz sobresale y se desplaza hacia el borde del rostro.
 
-**Simulación del ataque con foto (antes de la prueba en vivo).** Con la foto de Daniel se generaron tres videos en los que la foto plana gira hasta ±45° (transformación de perspectiva, como inclinar la pantalla que la muestra), y se pasaron por `liveness.verificar` usando **la misma foto como plantilla enrolada** (el peor caso para el sistema: la similitud facial es máxima).
+**Calibración con video-notas reales (2026-11-02).** La primera fórmula (`(nariz − medio de los ojos) / distancia entre ojos`) falló al probarla en Telegram. Cerca del perfil, la distancia entre los ojos en la imagen tiende a cero y el yaw se disparaba hasta **±4**, a veces hacia los dos lados. Hubo dos efectos: (1) dos logins legítimos con el reto `girar_izquierda_y_derecha` se rechazaron porque los picos invertían el orden aparente, y (2) **una video-nota girando a ambos lados fue aceptada para el reto `girar_derecha`**. Con eso, un video pregrabado que gire a los dos lados pasaría cualquier reto de un lado, y el reto aleatorio perdería su sentido.
+
+Para corregirlo se grabaron 5 video-notas de calibración (copias locales temporales, borradas después) y se compararon tres fórmulas:
+
+| Video | yaw nariz/ojos (anterior) | **yaw nariz/centro del rostro (elegida)** |
+|---|---|---|
+| Quieto de frente (ruido) | ±0.04 | **±0.04** |
+| Giro suave (~20°) a la izquierda | hasta +1.24 | **+0.46** |
+| Giro completo a la izquierda | hasta +2.07 | **+0.52** |
+| Giro completo a la derecha | hasta −1.94 | **−0.65** |
+| Izquierda y luego derecha | +4.18 / −4.01 | **+0.55 / −0.63** |
+
+La fórmula elegida es acotada (≈ ±0.65 de perfil), suave entre frames y tiene unas 10 veces más rango que el ruido. Los umbrales salieron de esta tabla: mínimo **0.25** (unas 6 veces el ruido y por debajo del giro suave) y |yaw| inicial ≤ 0.15.
+
+**Repetición de los 5 videos por `liveness.verificar` completo** (giro + mismo rostro + 1:1) con cada reto: **15 de 15 decisiones correctas**. Cada video pasa solo el reto que corresponde, el quieto no pasa ninguno y el de los dos lados ya no pasa los retos de un lado.
+
+**Simulación del ataque con foto (prueba 10).** Una foto de Daniel se giró en perspectiva de 0° a +50° y a −50° (como inclinar la pantalla que la muestra) y se pasó por `liveness.verificar`. Se usó su propio enrolamiento, el peor caso para el sistema: la similitud facial es alta.
 
 | Reto pedido | Resultado | yaw mínimo / máximo medido | Motivo (auditoría) |
 |---|---|---|---|
-| `girar_izquierda` | Rechazado | −0.080 / +0.038 | `movimiento_no_detectado` |
-| `girar_derecha` | Rechazado | −0.080 / +0.075 | `movimiento_no_detectado` |
-| `girar_izquierda_y_derecha` | Rechazado | −0.080 / +0.082 | `movimiento_no_detectado` |
+| `girar_izquierda` | Rechazado | −0.052 / +0.053 | `movimiento_no_detectado` |
+| `girar_derecha` | Rechazado | −0.052 / +0.053 | `movimiento_no_detectado` |
+| `girar_izquierda_y_derecha` | Rechazado | −0.052 / +0.053 | `movimiento_no_detectado` |
 
-Aunque la foto se inclinó 45°, el yaw solo osciló ±0.08 (ruido del detector), muy por debajo del desplazamiento de 0.18 que exige el reto. Esto confirma que el reto de giro distingue un rostro 3D de una imagen plana, y justifica haber excluido `acercarse` de los retos sorteados. ⚠️ PENDIENTE: medir el yaw real de una cabeza girando (calibración con una video-nota) para confirmar que supera 0.18 con holgura.
+Aunque la foto se inclinó 50°, el yaw no pasó de ±0.06, mientras que una cabeza real llega a 0.46–0.65 y el reto exige 0.25. Esto confirma que el reto de giro distingue un rostro 3D de una imagen plana, y justifica haber excluido `acercarse` de los retos sorteados.
 
 **Límites:** ver pregunta 4.
 
@@ -253,12 +287,12 @@ Ver la tabla de la sección 3 (entrada, salida y qué pasa si se elimina cada co
 La verificación es **1:1** porque la cuenta de Telegram ya dice quién **afirma** ser el usuario (factor de posesión) y el rostro lo **confirma** (factor biométrico). Con 1:N, el sistema buscaría "a quién se parece más" entre todos los enrolados: la probabilidad de una falsa aceptación crece con el número de usuarios, se pierde el factor de posesión (cualquier cuenta podría entrar como cualquier persona) y el atacante no necesita robar una cuenta concreta.
 
 ### 3. Umbral
-⚠️ Completar con la tabla real. El error más grave es la **falsa aceptación** (alguien ve notas u observaciones ajenas o modifica notas). Por eso se elige el umbral con FAR = 0 en nuestros datos y se acepta algo de FRR (el usuario legítimo reintenta). Si el sistema protegiera **dinero**, el costo de un FAR sería mucho mayor: subiríamos el umbral aunque el FRR creciera, exigiríamos un segundo factor (código de un solo uso por otro canal), liveness más fuerte (certificado, con profundidad o textura), límites por transacción y revisión humana de operaciones de riesgo. También mediríamos con muchos más pares (cientos de personas), porque con 20 pares genuinos la estimación es poco precisa.
+El error más grave es la **falsa aceptación** (alguien ve notas u observaciones ajenas o modifica notas). El falso rechazo solo obliga al usuario legítimo a reintentar. En nuestra tabla hubo FAR = FRR = 0 entre 0.25 y 0.50, así que la elección no fue entre los dos errores sino **dónde dejar el margen**. Elegimos 0.40, más cerca del lado de los genuinos: 0.15 por encima del impostor más parecido (0.250) y aún lejos de las similitudes reales de login (0.65–0.70). Si la tabla hubiera mostrado solapamiento, habríamos preferido un umbral con FAR = 0 aunque subiera el FRR. Si el sistema protegiera **dinero**, el costo de un FAR sería mucho mayor: subiríamos el umbral aunque el FRR creciera, exigiríamos un segundo factor (código de un solo uso por otro canal), liveness más fuerte (certificado, con profundidad o textura), límites por transacción y revisión humana de operaciones de riesgo. También mediríamos con muchos más pares (cientos de personas), porque con 20 pares genuinos la estimación es poco precisa.
 
 ### 4. Prueba de vida
 **Detiene:** fotos impresas o mostradas en otra pantalla (no producen giro 3D), video-notas reenviadas, un video que no siga el reto sorteado, reutilizar un reto (un solo uso), responder tarde (caducidad), cambiar de cara a mitad del video y que alguien con otra cara use la cuenta (1:1).
 
-**No detiene:** una **máscara** 3D realista (tiene volumen y gira), un **deepfake en tiempo real** que siga la instrucción, ni un **video pregrabado del mismo reto** (con 3 retos, un atacante que tenga los tres grabados pasa siempre, y uno con uno solo pasa con probabilidad 1/3). Tampoco detecta inyección de video en una cámara virtual.
+**No detiene:** una **máscara** 3D realista (tiene volumen y gira), un **deepfake en tiempo real** que siga la instrucción, ni un **video pregrabado del mismo reto** (con 3 retos, un atacante que tenga los tres grabados pasa siempre, y uno con uno solo pasa con probabilidad 1/3). Con la primera versión del cálculo de giro, un único video girando a ambos lados pasaba **cualquier** reto; lo encontramos calibrando con video-notas reales y lo cerramos exigiendo que en los retos de un lado no haya giro grande hacia el otro. Tampoco detecta inyección de video en una cámara virtual.
 
 El reto debe ser **aleatorio** para que no se pueda preparar la respuesta de antemano; **con caducidad** para que no haya tiempo de fabricarla (editar un video, generar un deepfake); y **de un solo uso** para que una respuesta válida interceptada o repetida no sirva dos veces (ataque de repetición).
 
@@ -342,4 +376,6 @@ Para este examen el grupo usó **Claude Code (Anthropic)** como asistente de pro
 | 12 | Suite de seguridad con el LLM real: primera corrida 16/17 (falso negativo por espacios Unicode en la respuesta); se normalizó la comparación y se agregaron P10–P13 (pruebas obligatorias 2, 3, 7 y 8). Resultado final: **21/21 en modo agente y 21/21 en modo router** (tras hacer que un error del router caiga a la ruta de respaldo). | `resultados/` |
 | 13 | Simulación de la prueba 10 con la foto de Daniel girada ±45°: los tres retos la rechazan (`movimiento_no_detectado`, yaw máx. 0.082). | sección 5 |
 | 14 | `pytest`: **48 pruebas, todas pasan**; `ruff` sin errores. | `tests/` |
+| 16 | Enrolamiento de ambos integrantes (5 fotos cada uno), tabla FAR/FRR (20 genuinos, 215 impostores) y umbral **0.40**. Primer login real aceptado (similitud 0.68). | `resultados/umbral.md` |
+| 17 | Calibración de la prueba de vida con 5 video-notas reales: la fórmula del yaw por distancia entre ojos se disparaba de perfil y un giro a ambos lados pasaba retos de un lado. Nueva fórmula (nariz vs. centro del rostro), mínimo 0.25 y regla del lado contrario; 15/15 decisiones correctas sobre los videos, y la foto girada ±50° es rechazada. Se encontró además que el `.env` se cargaba después de que algunos módulos leían su configuración (el signo y el mínimo del giro usaban siempre el valor por defecto); ahora se carga al importar `config.py`. | `face.py`, `liveness.py`, `config.py` |
 | 15 | Bot conectado a Telegram (long polling). Prueba 3 en vivo: el modelo dedujo la fecha del simulacro a partir del historial (sin fuga). Se agregó el chequeo de fechas no fundamentadas, el soporte de `historial_previo` en la suite y el caso P14. `pytest`: **54 pruebas**; suite: **22/22**. | `fundamentacion.py`, `tests/test_fundamentacion.py` |

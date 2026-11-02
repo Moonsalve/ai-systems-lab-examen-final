@@ -7,9 +7,9 @@ Verificaciones (todas obligatorias; si una falla, se rechaza):
   2. Mismo rostro: el frame más frontal de la primera mitad y el de la segunda mitad se
      parecen (similitud ≥ umbral). Detecta que alguien cambie la cara a mitad del video.
   3. Movimiento pedido, medido con landmarks:
-       yaw = (nariz_x − medio_ojos_x) / distancia_entre_ojos
+       yaw = (nariz_x − centro_del_rostro_x) / ancho_del_rostro
        girar_*: el yaw parte cerca de 0 (frente) y alcanza |Δyaw| ≥ YAW_MINIMO en el sentido
-                pedido. Una FOTO girada frente a la cámara no cambia este cociente (es plana),
+                pedido; en los retos de un lado, el giro al lado contrario debe quedar bajo el mínimo. Una FOTO girada frente a la cámara no cambia este cociente (es plana),
                 por eso el giro detecta fotos mostradas en otra pantalla.
        acercarse: ancho_máximo_del_rostro / ancho_inicial ≥ CRECIMIENTO_MINIMO.
   4. Identidad 1:1: el frame más frontal se compara con los embeddings del DUEÑO de la cuenta.
@@ -33,8 +33,9 @@ from face import MotorFacial, Rostro, similitud, similitud_con_enrolados
 FRAMES_A_MUESTREAR = 16
 FRACCION_MIN_FRAMES_VALIDOS = 0.7
 MIN_FRAMES_VALIDOS = 6
-YAW_FRONTAL_MAX = 0.25  # |yaw| inicial máximo para considerar que empezó de frente
-YAW_MINIMO = float(os.getenv("LIVENESS_YAW_MINIMO", "0.18"))  # cuánto debe girar
+# Calibrados con video-notas reales (ver informe): quieto ≤ 0.04, giro suave ~0.46, giro completo 0.5–0.65.
+YAW_FRONTAL_MAX = 0.15  # |yaw| inicial máximo para considerar que empezó de frente
+YAW_MINIMO = float(os.getenv("LIVENESS_YAW_MINIMO", "0.25"))  # cuánto debe girar hacia el lado pedido
 CRECIMIENTO_MINIMO = 1.3
 # Signo del yaw cuando la persona gira a SU izquierda. +1 en video sin espejo; calibrar con
 # --calibrar y, si la cámara espeja, poner LIVENESS_SIGNO_IZQUIERDA=-1 en el .env.
@@ -105,10 +106,12 @@ def verificar_movimiento(reto: str, rostros: list[Rostro]) -> tuple[bool, dict]:
         return False, detalles
     giro_izq = max(yaws) - inicio  # cuánto llegó a la izquierda
     giro_der = inicio - min(yaws)  # cuánto llegó a la derecha
+    # En los retos de un lado, el giro hacia el lado CONTRARIO debe quedarse por debajo del mínimo:
+    # si no, un video que gira a ambos lados (p. ej. pregrabado) pasaría cualquier reto.
     if reto == "girar_izquierda":
-        return giro_izq >= YAW_MINIMO, detalles
+        return giro_izq >= YAW_MINIMO and giro_der < YAW_MINIMO, detalles
     if reto == "girar_derecha":
-        return giro_der >= YAW_MINIMO, detalles
+        return giro_der >= YAW_MINIMO and giro_izq < YAW_MINIMO, detalles
     if reto == "girar_izquierda_y_derecha":
         i_izq, i_der = int(np.argmax(yaws)), int(np.argmin(yaws))
         orden_ok = i_izq < i_der  # primero izquierda, luego derecha
@@ -163,11 +166,11 @@ def verificar(
 def _calibrar(video: Path) -> None:
     motor = MotorFacial()
     print(f"Signo configurado para IZQUIERDA: {SIGNO_IZQUIERDA:+.0f}")
-    print("frame  rostros  yaw(crudo)  ancho")
+    print("frame  rostros  yaw     ancho")
     for i, frame in muestrear_frames(video, 30):
         rostros = motor.detectar(frame)
         if len(rostros) == 1:
-            print(f"{i:5d}  1        {rostros[0].yaw():+.3f}     {rostros[0].ancho:.0f}")
+            print(f"{i:5d}  1        {rostros[0].yaw():+.3f}  {rostros[0].ancho:.0f}")
         else:
             print(f"{i:5d}  {len(rostros)}")
     print("\nSi giraste a TU izquierda y el yaw crudo se volvió NEGATIVO, la cámara espeja:")

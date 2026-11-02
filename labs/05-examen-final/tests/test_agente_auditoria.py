@@ -88,46 +88,63 @@ def test_aviso_restringido_lo_garantiza_el_software():
 # --- Movimiento de la prueba de vida con landmarks sintéticos ----------------------------------
 
 
-def _rostro(nariz_x: float, ancho: float = 100) -> Rostro:
+def _rostro(yaw: float, ancho: float = 100) -> Rostro:
+    """Rostro sintético con el yaw pedido: nariz desplazada yaw·ancho desde el centro del recuadro."""
     fila = np.zeros(15, dtype=np.float32)
     fila[:4] = [0, 0, ancho, ancho]
-    fila[4:6] = [40, 50]  # ojo derecho (de la persona)
-    fila[6:8] = [60, 50]  # ojo izquierdo
-    fila[8:10] = [nariz_x, 60]  # nariz; medio de los ojos en x=50, distancia 20
+    fila[4:6] = [0.4 * ancho, 0.5 * ancho]  # ojo derecho (de la persona)
+    fila[6:8] = [0.6 * ancho, 0.5 * ancho]  # ojo izquierdo
+    fila[8:10] = [ancho / 2 + yaw * ancho, 0.6 * ancho]  # nariz
     return Rostro(fila)
 
 
-def _secuencia(*narices: float) -> list[Rostro]:
-    return [_rostro(x) for x in narices]
+def _secuencia(*yaws: float) -> list[Rostro]:
+    return [_rostro(y) for y in yaws]
+
+
+# Valores tomados de video-notas reales: quieto ≤ 0.04, giro suave ~0.46, giro completo 0.5-0.65.
 
 
 def test_giro_izquierda_detectado():
-    ok, _ = verificar_movimiento("girar_izquierda", _secuencia(50, 50, 53, 57, 50))
-    assert ok
+    assert verificar_movimiento("girar_izquierda", _secuencia(0, 0.01, 0.3, 0.5, 0.1))[0]
+
+
+def test_giro_suave_basta():
+    assert verificar_movimiento("girar_izquierda", _secuencia(0, 0.02, 0.21, 0.42, 0.46, 0.2))[0]
 
 
 def test_sin_movimiento_no_pasa():
+    quieto = _secuencia(0.01, -0.02, 0.04, 0.03, -0.02, 0.02)
     for reto in ("girar_izquierda", "girar_derecha", "girar_izquierda_y_derecha"):
-        assert not verificar_movimiento(reto, _secuencia(50, 50, 50.5, 50, 49.8))[0]
+        assert not verificar_movimiento(reto, quieto)[0]
 
 
 def test_giro_en_sentido_contrario_no_pasa():
-    assert not verificar_movimiento("girar_derecha", _secuencia(50, 50, 55, 58, 52))[0]
+    assert not verificar_movimiento("girar_derecha", _secuencia(0, 0, 0.3, 0.5, 0.2))[0]
+
+
+def test_girar_a_ambos_lados_no_pasa_un_reto_de_un_lado():
+    # Video 5 de la calibración (izquierda y luego derecha) fue ACEPTADO para "girar_derecha"
+    # con la regla anterior. Un video pregrabado así pasaría cualquier reto de un lado.
+    ambos = _secuencia(0.09, 0.03, 0.34, 0.55, 0.49, 0.07, -0.23, -0.62, -0.56, -0.23, 0.05)
+    assert not verificar_movimiento("girar_derecha", ambos)[0]
+    assert not verificar_movimiento("girar_izquierda", ambos)[0]
+    assert verificar_movimiento("girar_izquierda_y_derecha", ambos)[0]
 
 
 def test_izquierda_y_derecha_exige_orden():
-    assert verificar_movimiento("girar_izquierda_y_derecha", _secuencia(50, 50, 57, 50, 43))[0]
-    assert not verificar_movimiento("girar_izquierda_y_derecha", _secuencia(50, 50, 43, 50, 57))[0]
+    assert verificar_movimiento("girar_izquierda_y_derecha", _secuencia(0, 0, 0.5, 0, -0.5))[0]
+    assert not verificar_movimiento("girar_izquierda_y_derecha", _secuencia(0, 0, -0.5, 0, 0.5))[0]
 
 
 def test_debe_empezar_de_frente():
-    assert not verificar_movimiento("girar_izquierda", _secuencia(58, 58, 62, 66))[0]
+    assert not verificar_movimiento("girar_izquierda", _secuencia(0.3, 0.3, 0.45, 0.6))[0]
 
 
 def test_acercarse():
-    rostros = [_rostro(50, ancho=a) for a in (100, 100, 120, 140)]
+    rostros = [_rostro(0, ancho=a) for a in (100, 100, 120, 140)]
     assert verificar_movimiento("acercarse", rostros)[0]
-    assert not verificar_movimiento("acercarse", [_rostro(50, 100) for _ in range(4)])[0]
+    assert not verificar_movimiento("acercarse", [_rostro(0, 100) for _ in range(4)])[0]
 
 
 @pytest.mark.asyncio

@@ -54,6 +54,9 @@ MAX_HISTORIAL = 20  # mensajes (10 turnos) por chat
 CONFIRM_TIMEOUT_SECONDS = 60
 MAX_TELEGRAM = 4000  # Telegram corta en 4096 caracteres
 MAX_SEGUNDOS_VIDEO = 60  # una video-nota de Telegram dura como máximo 60 s
+# SOLO para calibrar la prueba de vida: si se define, se guarda una copia de cada video-nota en
+# esa carpeta (ignorada por git). Vacío = el video nunca se conserva. Se borra al calibrar.
+GUARDAR_VIDEOS_DIR = os.getenv("LIVENESS_GUARDAR_VIDEOS", "").strip()
 MAX_BYTES_VIDEO = 20 * 1024 * 1024
 PRIVADO = filters.ChatType.PRIVATE & filters.UpdateType.MESSAGE  # solo chats 1:1, sin ediciones
 
@@ -200,6 +203,13 @@ async def on_video_note(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     try:
         archivo = await nota.get_file()
         await archivo.download_to_drive(ruta)
+        if GUARDAR_VIDEOS_DIR:
+            destino = Path(GUARDAR_VIDEOS_DIR)
+            destino.mkdir(parents=True, exist_ok=True)
+            reto = est.store.reto_pendiente_nombre(uid)
+            copia = destino / f"{msg.date:%Y%m%d_%H%M%S}_{uid}_{reto}.mp4"
+            copia.write_bytes(Path(ruta).read_bytes())
+            logger.warning("CALIBRACIÓN: video-nota guardada en %s (borrar al terminar)", copia)
         resultado = await asyncio.to_thread(est.login.verificar_video, uid, Path(ruta), msg.date)
     finally:
         try:  # el video NUNCA se conserva

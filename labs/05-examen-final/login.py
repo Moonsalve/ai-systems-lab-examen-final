@@ -119,7 +119,12 @@ class ServicioLogin:
             return ResultadoLogin(False, MENSAJE_BLOQUEO)
         sesion = self.store.login_ok(uid, usuario)
         self.auditoria.registrar(
-            "login_aceptado", uid, motivo=reto.nombre, similitud=resultado.similitud, usuario_id=usuario.id
+            "login_aceptado",
+            uid,
+            motivo=reto.nombre,
+            similitud=resultado.similitud,
+            usuario_id=usuario.id,
+            **_solo_numeros(resultado.detalles),
         )
         etiqueta = "estudiante" if usuario.rol == "estudiante" else "docente"
         return ResultadoLogin(True, f"Hola, {usuario.nombre} ({etiqueta}). Sesión iniciada.", sesion)

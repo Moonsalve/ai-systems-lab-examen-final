@@ -64,12 +64,16 @@ class Rostro:
         return self.bbox[2]
 
     def yaw(self) -> float:
-        """Giro horizontal aproximado: desplazamiento de la nariz respecto al punto medio de los ojos,
-        normalizado por la distancia entre ojos. ≈0 de frente; el signo depende del lado (y de si la
-        cámara espeja la imagen)."""
-        medio = (self.ojo_der + self.ojo_izq) / 2
-        distancia = float(np.linalg.norm(self.ojo_der - self.ojo_izq))
-        return float((self.nariz[0] - medio[0]) / max(distancia, 1e-6))
+        """Giro horizontal: desplazamiento de la nariz respecto al CENTRO del recuadro del rostro,
+        normalizado por el ancho del recuadro. ≈0 de frente, ≈±0.5 de perfil; positivo = la persona
+        gira a SU izquierda (calibrado con video-notas reales de Telegram, que no espejan).
+
+        Primera versión: (nariz − medio de los ojos) / distancia entre ojos. Con video-notas reales
+        se disparaba hasta ±4 cerca del perfil (la distancia entre ojos en la imagen tiende a 0) y
+        un giro a un lado podía producir picos hacia el otro. El ancho del recuadro no colapsa.
+        """
+        x, _, w, _ = self.bbox
+        return float((self.nariz[0] - (x + w / 2)) / max(w, 1e-6))
 
 
 def normalizar(v: np.ndarray) -> np.ndarray:

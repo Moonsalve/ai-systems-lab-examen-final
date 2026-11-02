@@ -37,6 +37,13 @@ MODELOS_DIR = LAB_DIR / "modelos"  # ONNX de opencv_zoo; no se versiona
 ROSTROS_DIR = LAB_DIR / "rostros"  # solo embeddings (.npy); no se versiona
 AUDIT_FILE = LAB_DIR / "auditoria.jsonl"  # no se versiona
 
+ENV_FILE = LAB_DIR.parent.parent / ".env"  # raíz del repositorio
+
+# El .env se carga AL IMPORTAR config, antes que cualquier otro módulo lea os.getenv a nivel de
+# módulo (liveness.SIGNO_IZQUIERDA, YAW_MINIMO, bot.GUARDAR_VIDEOS_DIR). Antes se cargaba dentro de
+# las funciones load_*, y esas constantes se quedaban con el valor por defecto sin avisar.
+load_dotenv(ENV_FILE if ENV_FILE.exists() else find_dotenv(usecwd=True))
+
 YUNET_MODEL = MODELOS_DIR / "face_detection_yunet_2023mar.onnx"
 SFACE_MODEL = MODELOS_DIR / "face_recognition_sface_2021dec.onnx"
 
