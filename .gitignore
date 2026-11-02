@@ -15,3 +15,13 @@ index/
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# Examen final: modelos, datos biométricos y evidencias locales (NUNCA se suben)
+modelos/
+rostros/
+fotos/
+videos/
+auditoria*.jsonl
+*.mp4
+*.npy
+academico.backup.json

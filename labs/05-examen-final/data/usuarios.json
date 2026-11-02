@@ -1,16 +1,16 @@
 {
-  "_nota": "Usuarios del sistema. El rol y el código se toman de este archivo, nunca del chat. Reemplazar <INTEGRANTE_1>, <INTEGRANTE_2> y <CODIGO_1> por los nombres y el código de estudiante reales del grupo.",
+  "_nota": "Usuarios del sistema. El rol y el código se toman de este archivo, nunca del chat. Reemplazar Daniel Felipe Aguilar Latorre, Juan David Monsalve Niño y 522709 por los nombres y el código de estudiante reales del grupo.",
   "usuarios": [
     {
       "id": "integrante_1",
-      "nombre": "<INTEGRANTE_1>",
+      "nombre": "Daniel Felipe Aguilar Latorre",
       "rol": "estudiante",
-      "codigo_estudiante": "<CODIGO_1>",
+      "codigo_estudiante": "522709",
       "telegram_user_id": null
     },
     {
       "id": "integrante_2",
-      "nombre": "<INTEGRANTE_2>",
+      "nombre": "Juan David Monsalve Niño",
       "rol": "docente",
       "codigo_estudiante": null,
       "telegram_user_id": null
