@@ -5,7 +5,7 @@ import pytest
 
 from agent import DENIED, Agent
 from auditoria import Auditoria, AuditoriaMemoria
-from conftest import ESTUDIANTE, sesion_de
+from conftest import DOCENTE, ESTUDIANTE, sesion_de
 from face import Rostro
 from liveness import verificar_movimiento
 from llm_client import LLMResponse, ToolCall
@@ -170,3 +170,40 @@ def test_signo_por_dispositivo():
     assert not verificar_movimiento("girar_izquierda", espejado)[0]
     assert verificar_movimiento("girar_izquierda", espejado, signo=-1)[0]
     assert not verificar_movimiento("girar_derecha", espejado, signo=-1)[0]
+
+
+class LLMInsistente:
+    """LLM falso que, tras un "No" del usuario, vuelve a pedir la misma acción (visto con el LLM real)."""
+
+    def __init__(self):
+        self.llamadas = 0
+
+    def chat(self, messages, **kwargs):
+        self.llamadas += 1
+        if self.llamadas <= 2:
+            llamada = ToolCall(f"c{self.llamadas}", "registrar_nota", '{"codigo":"2026002","evaluacion":"parcial_1","valor":4.0}')
+            return LLMResponse("", "fake", "tool_calls", 0, 0, [llamada])
+        return LLMResponse("Acción cancelada.", "fake", "stop", 0, 0)
+
+
+@pytest.mark.asyncio
+async def test_un_no_no_se_vuelve_a_preguntar_en_la_misma_respuesta():
+    preguntas = []
+
+    async def confirm_no(tool, args):
+        preguntas.append(tool.name)
+        return False
+
+    ejecutada = []
+
+    async def run(arguments):
+        ejecutada.append(arguments)
+        return "ok"
+
+    tool = Tool("registrar_nota", "", {"type": "object", "properties": {}}, run, False, "test")
+    agente = Agent(LLMInsistente(), [tool], confirm_no, sesion_de(DOCENTE))
+    respuesta = await agente.run("registra 4.0 en el parcial 1 de 2026002")
+    estados = [r.status for step in respuesta.steps for r in step.tool_runs]
+    assert estados == ["rechazada", "rechazada"]
+    assert preguntas == ["registrar_nota"]  # los botones se mostraron UNA sola vez
+    assert ejecutada == []

@@ -40,7 +40,10 @@ LIMIT_MESSAGE = (
     "Responde ahora al usuario con la información que ya tienes y di qué quedó pendiente."
 )
 
-REJECTED = "El usuario NO autorizó esta acción, así que no se ejecutó."
+REJECTED = (
+    "El usuario NO autorizó esta acción, así que no se ejecutó. No la vuelvas a intentar en esta "
+    "respuesta: infórmale que la acción quedó cancelada."
+)
 DENIED = "Error: esa herramienta no está disponible para este usuario. No se ejecutó."
 
 
@@ -83,6 +86,9 @@ class Agent:
         self.sesion = sesion
         self.auditoria = auditoria
         self.max_steps = max_steps
+        # Acciones que el usuario rechazó en ESTA pregunta: si el modelo las vuelve a pedir, el
+        # software las rechaza sin volver a preguntar (un "No" no se convierte en "pregúntale otra vez").
+        self._rechazadas: set[str] = set()
 
     async def _chat(self, messages: list[Message], definitions: list[dict], allow_tools: bool = True) -> LLMResponse:
         return await asyncio.to_thread(self.llm.chat, messages, tools=definitions, allow_tools=allow_tools)
@@ -139,7 +145,10 @@ class Agent:
 
         # 2. Generar no es ejecutar: una acción con efectos solo se ejecuta si el usuario la autoriza.
         if not tool.read_only:
+            if call.name in self._rechazadas:
+                return ToolRun(call, "rechazada", REJECTED)
             if not await self.confirm(tool, arguments):
+                self._rechazadas.add(call.name)
                 return ToolRun(call, "rechazada", REJECTED)
             # La confirmación puede tardar: si la sesión venció mientras tanto, ya no hay permiso.
             if not acceso.tool_permitida(self.sesion, call.name):
