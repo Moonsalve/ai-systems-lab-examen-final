@@ -1,5 +1,5 @@
 {
-  "_nota": "Datos ficticios del sistema académico. Una nota null significa que aún no está registrada. observaciones_docente solo puede verla el rol docente. Reemplazar 522709, 525559, Daniel Felipe Aguilar Latorre y Juan David Monsalve Niño por los códigos de estudiante y los nombres reales del grupo; las notas son ficticias.",
+  "_nota": "Datos ficticios del sistema académico. Una nota null significa que aún no está registrada. observaciones_docente solo puede verla el rol docente. Los nombres y códigos de los integrantes son reales; las notas son ficticias.",
   "estudiantes": {
     "2026001": {
       "nombre": "Ana Torres",

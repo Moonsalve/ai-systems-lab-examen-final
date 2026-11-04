@@ -139,7 +139,7 @@ def load_security_settings(require_token: bool = False) -> SecuritySettings:
 
     settings = SecuritySettings(
         telegram_bot_token=token,
-        face_match_threshold=float(os.getenv("FACE_MATCH_THRESHOLD", "0.363")),
+        face_match_threshold=float(os.getenv("FACE_MATCH_THRESHOLD", "0.40")),
         session_minutes=float(os.getenv("SESSION_MINUTES", "10")),
         login_max_attempts=int(os.getenv("LOGIN_MAX_ATTEMPTS", "3")),
         lockout_minutes=float(os.getenv("LOCKOUT_MINUTES", "5")),

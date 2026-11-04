@@ -16,6 +16,7 @@ cada componente, cómo interactúan y qué esconden los frameworks.
 | 2 | [`labs/02-rag`](labs/02-rag/) | Chatbot RAG sobre los documentos del curso (`Usuario → RAG → LLM`) |
 | 3 | [`labs/03-mcp`](labs/03-mcp/) | Asistente con tools y un servidor MCP (`Usuario → Asistente → LLM + Tools`) |
 | 4 | [`labs/04-agent-orchestration`](labs/04-agent-orchestration/) | Asistente que decide entre responder, usar RAG o invocar MCP (`Usuario → Orquestador → RAG + Tools + MCP`) |
+| Examen final | [`labs/05-examen-final`](labs/05-examen-final/) | Asistente en Telegram con reconocimiento facial y control de acceso por rol (`Usuario → Identidad → Orquestador → LLM + RAG + Tools + MCP`) |
 
 Actualiza tu copia con `git pull` cada semana.
 
@@ -86,5 +87,6 @@ ai-systems-lab-students/
     ├── 01-llm/
     ├── 02-rag/
     ├── 03-mcp/
-    └── 04-agent-orchestration/
+    ├── 04-agent-orchestration/
+    └── 05-examen-final/
 ```
