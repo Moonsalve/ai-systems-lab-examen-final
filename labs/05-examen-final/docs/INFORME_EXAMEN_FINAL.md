@@ -147,7 +147,7 @@ Prueba preliminar del pipeline (sin fotos de los integrantes, solo LFW): la mism
 1. **Margen contra la falsa aceptación**, el error grave: 0.40 queda 0.15 por encima del impostor más parecido (0.250). Con 0.30 el margen sería de solo 0.05, y con más personas o peor iluminación aparecerían impostores más parecidos que los de nuestra muestra.
 2. **Margen contra el falso rechazo con video real:** los frames de una video-nota tienen menos resolución y peor luz que las fotos de enrolamiento. Por eso no subimos a 0.50, que deja apenas 0.035 bajo el genuino más bajo.
 
-**Validación con video-notas reales (2026-11-02):** en los logins de Juan David la similitud del frame frontal contra su enrolamiento fue **0.65–0.70**. Las mismas video-notas contra el enrolamiento de Daniel dieron **0.11–0.13**, y fueron rechazadas (simulación de la prueba 11). El umbral queda en medio de las dos con amplio margen.
+**Validación con video-notas reales (2026-11-02):** en los logins de Juan David la similitud del frame frontal contra su enrolamiento fue **0.65–0.70**. Las mismas video-notas contra el enrolamiento de Daniel dieron **0.11–0.13**, y fueron rechazadas (simulación de la prueba 11). El 2026-11-05 se hizo la prueba 11 en Telegram, con la cuenta de Daniel y el giro correcto: rechazada con similitud **0.169** (sección 7). Los logins legítimos de ambos integrantes dieron **0.57–0.70**. El umbral queda en medio de los dos grupos con amplio margen.
 
 ---
 
@@ -262,7 +262,7 @@ Aunque la foto se inclinó 50°, el yaw no pasó de ±0.06, mientras que una cab
 
 ## 7. Fragmento de la auditoría
 
-Líneas reales de `auditoria.jsonl` del ensayo en Telegram del 2026-11-02 (hora UTC). `5894205403` es Juan David (docente) y `9185672436` es Daniel (estudiante). Las líneas no contienen imágenes ni embeddings: solo la similitud (un número) y las métricas del giro.
+Líneas reales de `auditoria.jsonl` de las pruebas en Telegram del 2026-11-02 y del 2026-11-05 (hora UTC). `5894205403` es Juan David (docente) y `9185672436` es Daniel (estudiante). Las líneas no contienen imágenes ni embeddings: solo la similitud (un número) y las métricas del giro.
 
 ```json
 {"fecha": "2026-11-02T17:41:36+00:00", "telegram_user_id": 9185672436, "evento": "login_aceptado", "motivo": "girar_derecha", "similitud": 0.642, "tool": null, "usuario_id": "integrante_1", "yaw_inicial": 0.006, "yaw_min": -0.581, "yaw_max": 0.062, "n_validas": 16, "continuidad": 0.898}
@@ -275,6 +275,7 @@ Líneas reales de `auditoria.jsonl` del ensayo en Telegram del 2026-11-02 (hora 
 {"fecha": "2026-11-02T17:44:16+00:00", "telegram_user_id": 9185672436, "evento": "tool_restringida_ejecutada", "motivo": null, "similitud": null, "tool": "consultar_mis_notas", "usuario_id": "integrante_1"}
 {"fecha": "2026-11-02T19:11:15+00:00", "telegram_user_id": 5894205403, "evento": "tool_restringida_ejecutada", "motivo": null, "similitud": null, "tool": "registrar_nota", "usuario_id": "integrante_2"}
 {"fecha": "2026-11-02T17:46:21+00:00", "telegram_user_id": 9185672436, "evento": "logout", "motivo": null, "similitud": null, "tool": null}
+{"fecha": "2026-11-05T12:40:27+00:00", "telegram_user_id": 9185672436, "evento": "login_rechazado", "motivo": "similitud_baja", "similitud": 0.1692, "tool": null, "reto": "girar_derecha", "yaw_inicial": 0.061, "yaw_min": -0.57, "yaw_max": 0.064, "n_validas": 16, "continuidad": 0.947}
 ```
 
 En orden:
@@ -288,6 +289,7 @@ En orden:
 8. Tool restringida `consultar_mis_notas` ejecutada para Daniel (prueba 5).
 9. Tool restringida `registrar_nota` ejecutada por el docente después de confirmar con el botón **Sí** (prueba 9).
 10. `/logout` de Daniel (prueba 14).
+11. Prueba 11: Juan David intenta entrar desde la cuenta de Daniel. El giro pasa (yaw −0.57) y es el mismo rostro en todo el video (continuidad 0.947), pero la verificación 1:1 lo rechaza: similitud **0.169** contra el umbral de 0.40.
 
 ---
 
@@ -308,7 +310,7 @@ Ver la tabla de la sección 3 (entrada, salida y qué pasa si se elimina cada co
 La verificación es **1:1** porque la cuenta de Telegram ya dice quién **afirma** ser el usuario (factor de posesión) y el rostro lo **confirma** (factor biométrico). Con 1:N, el sistema buscaría "a quién se parece más" entre todos los enrolados: la probabilidad de una falsa aceptación crece con el número de usuarios, se pierde el factor de posesión (cualquier cuenta podría entrar como cualquier persona) y el atacante no necesita robar una cuenta concreta.
 
 ### 3. Umbral
-El error más grave es la **falsa aceptación** (alguien ve notas u observaciones ajenas o modifica notas). El falso rechazo solo obliga al usuario legítimo a reintentar. En nuestra tabla hubo FAR = FRR = 0 entre 0.25 y 0.50, así que la elección no fue entre los dos errores sino **dónde dejar el margen**. Elegimos 0.40, más cerca del lado de los genuinos: 0.15 por encima del impostor más parecido (0.250) y aún lejos de las similitudes reales de login (0.65–0.70). Si la tabla hubiera mostrado solapamiento, habríamos preferido un umbral con FAR = 0 aunque subiera el FRR. Si el sistema protegiera **dinero**, el costo de un FAR sería mucho mayor: subiríamos el umbral aunque el FRR creciera, exigiríamos un segundo factor (código de un solo uso por otro canal), liveness más fuerte (certificado, con profundidad o textura), límites por transacción y revisión humana de operaciones de riesgo. También mediríamos con muchos más pares (cientos de personas), porque con 20 pares genuinos la estimación es poco precisa.
+El error más grave es la **falsa aceptación** (alguien ve notas u observaciones ajenas o modifica notas). El falso rechazo solo obliga al usuario legítimo a reintentar. En nuestra tabla hubo FAR = FRR = 0 entre 0.25 y 0.50, así que la elección no fue entre los dos errores sino **dónde dejar el margen**. Elegimos 0.40, más cerca del lado de los genuinos: 0.15 por encima del impostor más parecido (0.250) y aún lejos de las similitudes reales de login (0.57–0.70). Si la tabla hubiera mostrado solapamiento, habríamos preferido un umbral con FAR = 0 aunque subiera el FRR. Si el sistema protegiera **dinero**, el costo de un FAR sería mucho mayor: subiríamos el umbral aunque el FRR creciera, exigiríamos un segundo factor (código de un solo uso por otro canal), liveness más fuerte (certificado, con profundidad o textura), límites por transacción y revisión humana de operaciones de riesgo. También mediríamos con muchos más pares (cientos de personas), porque con 20 pares genuinos la estimación es poco precisa.
 
 ### 4. Prueba de vida
 **Detiene:** fotos impresas o mostradas en otra pantalla (no producen giro 3D), video-notas reenviadas, un video que no siga el reto sorteado, reutilizar un reto (un solo uso), responder tarde (caducidad), cambiar de cara a mitad del video y que alguien con otra cara use la cuenta (1:1).
@@ -375,7 +377,7 @@ Del núcleo, casi nada: el Lab 04 ya separaba el orquestador de la consola. Hubo
 
 ## 10. Uso de IA
 
-Para este examen el grupo usó **Claude Code (Anthropic)** como asistente de programación: lectura del enunciado y del código base, propuesta de arquitectura, implementación de los módulos, pruebas automáticas, revisión de seguridad y borrador de este informe. El grupo revisó el código, ejecutó las pruebas, hizo el enrolamiento, calibró la prueba de vida, grabó el video y ajustó las respuestas de análisis con lo observado en sus propias trazas. ⚠️ Ajustar según la política del curso.
+Para este examen el grupo usó **Claude Code (Anthropic)** como asistente de programación: lectura del enunciado y del código base, propuesta de arquitectura, implementación de los módulos, pruebas automáticas, revisión de seguridad, borrador de este informe y guion del video. El grupo revisó el código, ejecutó las pruebas, hizo el enrolamiento, calibró la prueba de vida, grabó el video y ajustó las respuestas de análisis con lo observado en sus propias trazas.
 
 ---
 
@@ -404,3 +406,4 @@ Para este examen el grupo usó **Claude Code (Anthropic)** como asistente de pro
 | 19 | Pruebas 8 y 9 en Telegram (docente). En la 9, después de pulsar **No**, el modelo volvió a pedir `registrar_nota` y aparecieron los botones otra vez. Ahora el agente recuerda las acciones rechazadas en esa respuesta y las rechaza sin volver a preguntar: un "No" no se convierte en "pregúntale otra vez". | `agent.py` |
 | 20 | Revisión antes de la entrega (2026-11-04): `pytest` con **58 pruebas, todas pasan**; umbral por defecto de `config.py` alineado con el elegido (0.40); documentación actualizada. | `tests/`, `config.py` |
 | 21 | Corrida final de la suite con el LLM real, después del último cambio de `agent.py` (2026-11-05): **22/22 en modo agente**. | `resultados/pruebas_seguridad.md` |
+| 22 | Prueba 11 en Telegram (2026-11-05): rechazada con `similitud_baja` (0.169). Grabación del video. | sección 7 |
