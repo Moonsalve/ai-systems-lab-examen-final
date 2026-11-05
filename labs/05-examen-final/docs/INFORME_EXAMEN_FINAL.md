@@ -371,7 +371,7 @@ Del núcleo, casi nada: el Lab 04 ya separaba el orquestador de la consola. Hubo
 
 ## 9. Declaración de borrado
 
-⚠️ PENDIENTE de firmar al terminar: "El grupo borró los embeddings (`rostros/*.npy`), las fotos de enrolamiento y de prueba (`fotos/`), las video-notas descargadas y el `auditoria.jsonl` de pruebas el __/11/2026. Las imágenes de LFW eran de un dataset público y también se eliminaron."
+El grupo borró los embeddings (`rostros/*.npy`), las fotos de enrolamiento y de prueba (`fotos/`), las video-notas descargadas y el `auditoria.jsonl` de pruebas el 05/11/2026. Las imágenes de LFW eran de un dataset público y también se eliminaron.
 
 ---
 
