@@ -39,12 +39,12 @@ Todo corre en **una sola máquina**, la que tiene `.env`, `modelos/`, `rostros/`
    ```
    Deben pasar todas. La suite actualiza `resultados/pruebas_seguridad.md`; esa tabla va luego al informe.
 5. **Arrancar el bot:** `uv run python labs/05-examen-final/bot.py`. Debe mostrar `umbral 0.400`.
-6. **Probar el login de cada uno,** con **el mismo celular de siempre**: el signo del giro está calibrado por celular.
+6. **Probar el login de cada uno,** con **el mismo celular de siempre**: el signo del giro está calibrado por celular. Ensayar también la prueba 11 antes de grabarla: hasta ahora solo se simuló con videos guardados, no en Telegram.
 7. **Dejar abierto:** Telegram, el diagrama de la sección 3, `prompts.py`, `auditoria.jsonl` y una terminal.
 
 ### Grabar primero el montaje (pruebas 11 a 14)
 
-Poner `SESSION_MINUTES=1` y `LIVENESS_TIMEOUT_SECONDS=20` en `.env` y reiniciar el bot. Cada rechazo suma al contador de bloqueo: para evitar un bloqueo antes de tiempo, reiniciar el bot entre pruebas (el contador vive en memoria).
+Poner `SESSION_MINUTES=1` y `LIVENESS_TIMEOUT_SECONDS=20` en `.env` y reiniciar el bot. Cada rechazo suma al contador de bloqueo: para evitar un bloqueo antes de tiempo, reiniciar el bot entre pruebas (el contador vive en memoria). Una video-nota enviada sin `/login` previo también cuenta como intento fallido.
 
 | # | Qué hacer | Qué debe verse | Motivo en `auditoria.jsonl` |
 |---|---|---|---|
@@ -52,7 +52,7 @@ Poner `SESSION_MINUTES=1` y `LIVENESS_TIMEOUT_SECONDS=20` en `.env` y reiniciar 
 | 12a | `/login` y enviar la video-nota después de 20 s | Mensaje genérico | `reto_vencido` |
 | 12b | `/login` y **reenviar** una video-nota anterior | Mensaje genérico | `reenviado` |
 | 13 | Fallar tres veces seguidas | “Demasiados intentos fallidos…” | `login_rechazado` y luego `bloqueado` |
-| 14 | Daniel entra, hace `/logout` y pregunta “¿Cuáles son mis notas?” | No muestra notas y pide iniciar sesión | `logout` |
+| 14 | Daniel entra, hace `/logout` y repite la prueba 5: “¿Cuándo es el simulacro del segundo parcial?” y “¿Cuáles son mis notas?” | No muestra la fecha ni las notas, y pide iniciar sesión | `logout` |
 
 Mostrar en cada clip la línea de auditoría: el usuario siempre ve el mismo mensaje y sin esa línea no se distingue el motivo.
 
@@ -174,7 +174,7 @@ El reto es aleatorio y las respuestas del modelo varían: el guion describe el r
 - **Prueba 11:** “Juan David intenta entrar desde mi cuenta, con el giro correcto. Rechazado: la verificación es uno a uno contra el dueño de la cuenta.”
 - **Prueba 12:** “Una video-nota reenviada y otra enviada con el reto vencido. Ambas rechazadas.”
 - **Prueba 13:** “Tres fallos seguidos, y el login queda bloqueado temporalmente.”
-- **Prueba 14:** “Cierro sesión, pregunto otra vez por mis notas y me pide iniciar sesión.”
+- **Prueba 14:** “Cierro sesión, pregunto otra vez por el simulacro y por mis notas, y me pide iniciar sesión.”
 
 ### 8. Suite de seguridad (6:45–7:15) · prueba 15
 *Terminal: `uv run python labs/05-examen-final/pruebas_seguridad.py`. Acelerar la espera en edición, sin cortar la tabla final.*
@@ -196,7 +196,7 @@ El reto es aleatorio y las respuestas del modelo varían: el guion describe el r
 2. **Detener el bot y restaurar las notas:** `git restore labs/05-examen-final/data/academico.json`. El servidor MCP guarda los datos en memoria: restaurar con el bot encendido no sirve, porque la siguiente escritura los pisa.
 3. **Completar `docs/INFORME_EXAMEN_FINAL.md`:**
    - Sección de encabezado: enlace del video.
-   - Sección 6: pegar la tabla de `resultados/pruebas_seguridad.md` de la corrida final y su fecha.
+   - Sección 6: ya tiene la corrida del 2026-11-05. Si la tabla del video difiere, pegar la de `resultados/pruebas_seguridad.md` y su fecha.
    - Sección 7 (opcional): agregar la línea real de la prueba 11, con `similitud_baja`.
    - Sección 10: comprobar la política del curso sobre uso de IA y quitar el aviso `⚠️`.
 4. **Borrar los datos biométricos** (esto se hace al final, porque el bot deja de poder autenticar):
@@ -229,5 +229,5 @@ El reto es aleatorio y las respuestas del modelo varían: el guion describe el r
 | 11 | Juan David desde la cuenta de Daniel | Rechazado (1:1) | Daniel (montaje) | ☐ |
 | 12 | Reto vencido / video-nota reenviada | Rechazado | Daniel (montaje) | ☐ |
 | 13 | Tres fallos | Bloqueo | Daniel (montaje) | ☐ |
-| 14 | Logout/expiración + mis notas | Pide login | Daniel (montaje) | ☐ |
+| 14 | Logout/expiración + simulacro y mis notas | Pide login | Daniel (montaje) | ☐ |
 | 15 | `pruebas_seguridad.py` | Todos pasan | Juan David | ☐ |
