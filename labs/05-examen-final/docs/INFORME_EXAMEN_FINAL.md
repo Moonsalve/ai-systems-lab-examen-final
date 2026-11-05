@@ -7,7 +7,7 @@
 | | |
 |---|---|
 | **Integrantes** | Daniel Felipe Aguilar Latorre (integrante 1 · rol **estudiante** · código **522709**) · Juan David Monsalve Niño (integrante 2 · rol **docente** · código 525559) |
-| **Video** | ⚠️ PENDIENTE — enlace (YouTube no listado / Stream / Drive con acceso al docente) |
+| **Video** | https://www.youtube.com/watch?v=1uL8aKC1i7A |
 | **Código** | https://github.com/Moonsalve/ai-systems-lab-examen-final (carpeta `labs/05-examen-final/`; sin `.env`, token, API keys, `index/`, `modelos/`, `rostros/`, fotos ni videos) |
 | **Carpeta** | `labs/05-examen-final/` |
 | **LLM** | Groq · `openai/gpt-oss-120b` (Chat Completions con tool calling). `llama-3.3-70b-versatile`, el modelo sugerido en el repositorio base, ya no está disponible en Groq (error 404 `model_not_found`). |
