@@ -56,7 +56,8 @@ uv run python labs/05-examen-final/umbral.py --persona labs/05-examen-final/foto
 uv run python labs/05-examen-final/liveness.py --calibrar ruta/al/video.mp4
 ```
 
-Si al girar a TU izquierda el yaw crudo se vuelve negativo, poner `LIVENESS_SIGNO_IZQUIERDA=-1` en `.env`.
+Si al girar a TU izquierda el yaw crudo se vuelve negativo, poner `"signo_camara": -1` a ese usuario en
+`data/usuarios.json`: depende del celular de cada uno. `LIVENESS_SIGNO_IZQUIERDA` del `.env` es solo el valor por defecto.
 
 ## 3. Ejecutar
 
@@ -84,7 +85,8 @@ Comandos del bot: `/start`, `/quiensoy`, `/login`, `/logout`, `/traza`, `/reinic
 | `face.py` / `enroll.py` / `umbral.py` | YuNet + SFace, enrolamiento local, tabla FAR/FRR. |
 | `liveness.py` / `login.py` | Prueba de vida sobre la video-nota y flujo de login 1:1. |
 | `auditoria.py` | `auditoria.jsonl` sin imágenes ni embeddings. |
-| `pruebas_seguridad.py` | Casos A1–A8 + P1–P9 sobre el núcleo. |
+| `fundamentacion.py` | Descarta respuestas con fechas sin fuente cuando el tema es restringido. |
+| `pruebas_seguridad.py` | Casos A1–A8 + P1–P14 sobre el núcleo. |
 
 ## 5. Lo que NUNCA se sube
 

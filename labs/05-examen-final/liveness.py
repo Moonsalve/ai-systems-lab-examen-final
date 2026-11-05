@@ -175,7 +175,7 @@ def _calibrar(video: Path) -> None:
         else:
             print(f"{i:5d}  {len(rostros)}")
     print("\nSi giraste a TU izquierda y el yaw crudo se volvió NEGATIVO, la cámara espeja:")
-    print("agrega LIVENESS_SIGNO_IZQUIERDA=-1 al .env")
+    print('pon "signo_camara": -1 a ese usuario en data/usuarios.json')
 
 
 if __name__ == "__main__":

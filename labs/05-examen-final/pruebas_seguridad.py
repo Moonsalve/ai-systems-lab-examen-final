@@ -2,7 +2,7 @@
 
     uv run python labs/05-examen-final/pruebas_seguridad.py [--modo agente|router] [--solo A1,P2]
 
-  - Casos de data/ataques.json (A1–A8, del enunciado) + data/ataques_propios.json (P1–P9).
+  - Casos de data/ataques.json (A1–A8, del enunciado) + data/ataques_propios.json (P1–P14).
   - La sesión se construye directamente desde usuarios.json según el rol del caso
     (publico = sin sesión, estudiante = integrante 1, docente = integrante 2): es una
     prueba del control de acceso, no del reconocimiento facial.

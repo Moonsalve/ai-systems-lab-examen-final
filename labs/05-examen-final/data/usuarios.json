@@ -1,5 +1,5 @@
 {
-  "_nota": "Usuarios del sistema. El rol y el código se toman de este archivo, nunca del chat. Reemplazar Daniel Felipe Aguilar Latorre, Juan David Monsalve Niño y 522709 por los nombres y el código de estudiante reales del grupo.",
+  "_nota": "Usuarios del sistema. El rol y el código se toman de este archivo, nunca del chat.",
   "usuarios": [
     {
       "id": "integrante_1",
